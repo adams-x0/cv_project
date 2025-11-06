@@ -1,0 +1,28 @@
+﻿# Python cache
+__pycache__/
+*.pyc
+
+# Node / Build
+node_modules/
+dist/
+build/
+
+# FastAPI / Backend output folders
+runs/
+uploads/
+logs/
+*.log
+
+# YOLO / Model Weights
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# Env & Secrets
+.venv/
+.env
+
+# OS
+Thumbs.db
+.DS_Store
