@@ -1,16 +1,50 @@
-# React + Vite
+# ✅ Setup Instructions (Using Conda Only) – OWL-ViT + SAM Segmentation App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+------------------------------------------------------------
+📌 1. CREATE & ACTIVATE CONDA ENVIRONMENT
+------------------------------------------------------------
+conda create -n segmentation_env python=3.10 -y
+conda activate segmentation_env
 
-Currently, two official plugins are available:
+------------------------------------------------------------
+📌 2. INSTALL BACKEND DEPENDENCIES
+------------------------------------------------------------
+cd backend
+pip install --upgrade pip
+pip install -r requirements.txt
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+# If torch fails to install, use:
+# (CPU version)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-## React Compiler
+------------------------------------------------------------
+📌 3. DOWNLOAD SAM MODEL FILE (REQUIRED)
+------------------------------------------------------------
+# Run this inside backend folder
+wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Make sure the file is located at:
+# backend/sam_vit_b_01ec64.pth
 
-## Expanding the ESLint configuration
+------------------------------------------------------------
+📌 4. RUN THE FASTAPI BACKEND
+------------------------------------------------------------
+cd backend
+uvicorn main:app --reload --port 8000
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# API docs available at:
+# http://localhost:8000/docs
+
+------------------------------------------------------------
+📌 5. SET UP & RUN FRONTEND (React + Vite)
+------------------------------------------------------------
+cd ../frontend
+npm install
+
+# (Optional) Create a .env file in frontend folder:
+# VITE_BACKEND_URL=http://localhost:8000
+
+npm run dev
+
+# Frontend will start at:
+# http://localhost:5173
