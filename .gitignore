@@ -43,6 +43,7 @@ backend/.venv/
 backend/sam_vit_b_01ec64.pth      # SAM model file (large, not tracked)
 backend/uploads/                  # Uploaded images
 backend/outputs/                  # Segmentation results
+backend/yolov12/
 
 # YOLO model weights (if added later)
 *.pt

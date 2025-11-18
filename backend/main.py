@@ -5,6 +5,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from models.owlvit_sam import run_owlvit_sam
+from models.yolo_seg import run_yolo_seg
+
 
 app = FastAPI()
 
@@ -36,3 +38,21 @@ async def segment_with_owlvit(image: UploadFile = File(...), prompt: str = Form(
 
     result = run_owlvit_sam(str(img_path), prompt)
     return result
+
+
+@app.post("/segment/yolo")
+async def segment_with_yolo(image: UploadFile = File(...)):
+    img_name = f"{uuid4().hex}_{image.filename}"
+    img_path = UPLOAD_DIR / img_name
+
+    with img_path.open("wb") as f:
+        f.write(await image.read())
+
+    result = run_yolo_seg(str(img_path))
+    return result
+
+# Health Check
+# ----------------------------------------------------------
+@app.get("/")
+async def root():
+    return {"message": "Backend running with OWL-ViT + SAM + YOLOv8-Seg"}

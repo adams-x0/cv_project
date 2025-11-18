@@ -1,33 +1,47 @@
-# ✅ Setup Instructions (Using Conda Only) – OWL-ViT + SAM Segmentation App
+# Setup Instructions (Using Conda Only) – OWL-ViT + SAM Segmentation App
 
 ------------------------------------------------------------
-📌 1. CREATE & ACTIVATE CONDA ENVIRONMENT
+ 1. CREATE & ACTIVATE CONDA ENVIRONMENT
 ------------------------------------------------------------
 conda create -n segmentation_env python=3.10 -y
 conda activate segmentation_env
 
 ------------------------------------------------------------
-📌 2. INSTALL BACKEND DEPENDENCIES
+ 2. INSTALL BACKEND DEPENDENCIES
 ------------------------------------------------------------
 cd backend
-pip install --upgrade pip
 pip install -r requirements.txt
 
 # If torch fails to install, use:
 # (CPU version)
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+------------------------------------------------------------
+ 3. INSTALL YOLOv12 ENGINE (REQUIRED)
+------------------------------------------------------------
+
+cd ../yolov12
+pip install -e .
+
+# DO NOT install "ultralytics" from pip (it breaks YOLOv12)
 
 ------------------------------------------------------------
-📌 3. DOWNLOAD SAM MODEL FILE (REQUIRED)
+ 4. DOWNLOAD WEIGHTS (REQUIRED)
 ------------------------------------------------------------
-# Run this inside backend folder
+# Make sure the files are located in backend folder
+
+# SAM
+# Run this inside backend folder or click on link
 wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
 
-# Make sure the file is located at:
-# backend/sam_vit_b_01ec64.pth
+# YOLO
+# Download the model weights from here (Instance segmentation)
+ https://github.com/sunsmarterjie/yolov12
+
+
+
 
 ------------------------------------------------------------
-📌 4. RUN THE FASTAPI BACKEND
+ 5. RUN THE FASTAPI BACKEND
 ------------------------------------------------------------
 cd backend
 uvicorn main:app --reload --port 8000
@@ -36,7 +50,7 @@ uvicorn main:app --reload --port 8000
 # http://localhost:8000/docs
 
 ------------------------------------------------------------
-📌 5. SET UP & RUN FRONTEND (React + Vite)
+ 6. SET UP & RUN FRONTEND (React + Vite)
 ------------------------------------------------------------
 cd ../frontend
 npm install
