@@ -1,0 +1,73 @@
+# =========================================================
+# FRONTEND (React + Vite)
+# =========================================================
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.DS_Store
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# =========================================================
+# BACKEND (FastAPI + Python)
+# =========================================================
+backend/__pycache__/
+backend/models/__pycache__/
+backend/.pytest_cache/
+backend/*.pyc
+backend/.env
+
+# Local Python virtual environments (if used instead of conda)
+backend/venv/
+backend/.venv/
+
+# =========================================================
+# CONDA ENVIRONMENTS (if created locally in project)
+# =========================================================
+/env/
+/.conda/
+/conda_env/
+/segmentation_env/
+/*.conda
+
+# Keep environment.yml (Do NOT ignore if you decide to export)
+# environment.yml
+
+# =========================================================
+# MODEL WEIGHTS & GENERATED FILES
+# =========================================================
+backend/sam_vit_b_01ec64.pth      # SAM model file (large, not tracked)
+backend/uploads/                  # Uploaded images
+backend/outputs/                  # Segmentation results
+backend/yolov12/
+
+# YOLO model weights (if added later)
+*.pt
+*.pth
+*.mp4
+*.jpg
+
+
+# Hugging Face cache (optional)
+~/.cache/huggingface/
+
+# =========================================================
+# SYSTEM & OS FILES
+# =========================================================
+.DS_Store
+Thumbs.db
+
+# =========================================================
+# IDE/EDITOR & TEMPORARY FILES
+# =========================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.log
+*.tmp
+*.bak
