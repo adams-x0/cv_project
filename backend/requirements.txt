@@ -1,0 +1,23 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pillow
+
+# --- YOLOv12 + dependencies ---
+torch==2.2.2
+torchvision==0.17.2
+timm==1.0.14
+albumentations==2.0.4
+PyYAML==6.0.1
+opencv-python
+numpy==1.26.4
+supervision
+
+# --- OWL-ViT + SAM ---
+transformers
+huggingface-hub
+safetensors
+segment-anything
+
+# --- Mask2Former ---
+accelerate
