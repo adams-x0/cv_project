@@ -37,6 +37,9 @@ wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
 # Download the model weights from here (Instance segmentation)
  https://github.com/sunsmarterjie/yolov12
 
+# download trained yolo weight
+https://drive.google.com/drive/folders/1EG65LoOyMW0_On00ATcZpS_H9AHs05B6?usp=drive_link
+
  # SAM2
 cd models
 git clone https://github.com/facebookresearch/sam2.git && cd sam2
