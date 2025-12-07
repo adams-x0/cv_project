@@ -1,19 +1,23 @@
-import torch
-import numpy as np
-import cv2
 from pathlib import Path
-from PIL import Image
+import cv2
+import numpy as np
+import torch
+from PIL import Image, ImageOps
 
-# -----------------------------
-# GroundingDINO
-# -----------------------------
 from groundingdino.util.inference import Model as GDINOModel
-
-# -----------------------------
-# SAM2
-# -----------------------------
 from sam2.build_sam import build_sam2
 from sam2.sam2_image_predictor import SAM2ImagePredictor
+
+
+# ============================================================
+# GLOBAL SETTINGS & FIXES
+# ============================================================
+
+torch.utils.checkpoint.use_reentrant = False   # remove checkpoint warning
+
+
+def autocast():
+    return torch.amp.autocast("cuda")
 
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -21,7 +25,7 @@ BASE = Path(__file__).resolve().parent
 
 
 # ============================================================
-#               CONFIG PATHS
+# CONFIG PATHS
 # ============================================================
 
 GDINO_CONFIG = BASE / \
@@ -33,7 +37,7 @@ SAM2_CKPT = BASE / "sam2/checkpoints/sam2.1_hiera_base_plus.pt"
 
 
 # ============================================================
-#               LOAD MODELS
+# LOAD MODELS
 # ============================================================
 
 print("[GroundingDINO] Loading...")
@@ -47,142 +51,114 @@ print("[GroundingDINO] Loaded.")
 print("[SAM2] Loading...")
 sam2_model = build_sam2(
     config_file=str(SAM2_CONFIG),
-    ckpt_path=str(SAM2_CKPT)
+    ckpt_path=str(SAM2_CKPT),
 )
+sam2_model.to(DEVICE)
 sam2_predictor = SAM2ImagePredictor(sam2_model)
-print("[SAM2] Ready.")
+print("[SAM2] Ready.]")
 
 
 # ============================================================
-#                 MAIN PIPELINE
+# MAIN PIPELINE — PORTRAIT FIXED
 # ============================================================
 
 def run_grounded_sam(image_path: str, text_prompt: str):
-    """
-    GroundingDINO: text → bounding boxes
-    SAM2:          boxes → masks
-    Returns overlays, stickers, AND correct per-sticker labels.
-    """
-
     if not text_prompt.strip():
         return {"error": "Text prompt required for GroundingDINO."}
 
-    # -----------------------------
-    # Load image
-    # -----------------------------
-    image_pil = Image.open(image_path).convert("RGB")
-    image_np = np.array(image_pil)
+    # -------------------------------------------
+    # Load image (FIX PORTRAIT ROTATION)
+    # -------------------------------------------
+    # EXIF transpose makes portrait images correct BEFORE OpenCV sees them.
+    image_pil = ImageOps.exif_transpose(Image.open(image_path)).convert("RGB")
+    image_np = np.ascontiguousarray(np.array(image_pil))  # no rotation issues
+
+    orig_h, orig_w = image_np.shape[:2]
     image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
-    # -----------------------------
-    # DINO: text → box proposals
-    # -----------------------------
-    boxes, phrases = grounding_dino.predict_with_caption(
-        image_bgr,
-        caption=text_prompt,
-        box_threshold=0.45,
-        text_threshold=0.45,
-    )
+    # -------------------------------------------
+    # GroundingDINO: text -> bounding boxes
+    # -------------------------------------------
+    with torch.no_grad():
+        boxes, phrases = grounding_dino.predict_with_caption(
+            image_bgr,
+            caption=text_prompt,
+            box_threshold=0.45,
+            text_threshold=0.45,
+        )
 
     if boxes is None or len(boxes) == 0:
-        return {
-            "overlay": None,
-            "stickers": [],
-            "labels": [],
-            "message": "No objects detected."
-        }
+        return {"overlay": None, "stickers": [], "labels": [], "message": "No objects detected."}
 
-    # -----------------------------
-    # Convert to xyxy
-    # -----------------------------
     abs_boxes = []
-    clean_labels = []
+    for b in boxes:
+        xyxy = np.array(b[0]).astype(float)
+        if xyxy.shape[0] == 4:
+            abs_boxes.append(xyxy.astype(int).tolist())
 
-    for b, phr in zip(boxes, phrases):
-        try:
-            xyxy = np.array(b[0]).astype(float)
-        except:
-            continue
+    if not abs_boxes:
+        return {"overlay": None, "stickers": [], "labels": [], "message": "No valid boxes extracted."}
 
-        if xyxy.shape[0] != 4:
-            continue
-
-        x1, y1, x2, y2 = map(int, xyxy)
-        abs_boxes.append([x1, y1, x2, y2])
-
-        # phrase is like: "bottle (0.78)" → we keep only "bottle"
-        class_name = phr.split("(")[0].strip()
-        clean_labels.append(class_name)
-
-    if len(abs_boxes) == 0:
-        return {
-            "overlay": None,
-            "stickers": [],
-            "labels": [],
-            "message": "No valid boxes extracted."
-        }
-
-    # -----------------------------
+    # -------------------------------------------
     # SAM2 segmentation
-    # -----------------------------
+    # -------------------------------------------
     sam2_predictor.set_image(image_np)
 
     masks = []
     for box in abs_boxes:
-        m, scores, _ = sam2_predictor.predict(
-            box=np.array(box)[None, :],
-            multimask_output=False
-        )
-        masks.append(m[0])
+        with torch.no_grad():
+            with autocast():
+                m, _, _ = sam2_predictor.predict(
+                    box=np.array(box)[None, :],
+                    multimask_output=False
+                )
 
-    # -----------------------------
-    # Overlay
-    # -----------------------------
+        mask = m[0].squeeze()
+
+        # Ensure the mask matches correct shape
+        if mask.shape != (orig_h, orig_w):
+            mask = cv2.resize(mask.astype(np.float32), (orig_w, orig_h))
+
+        masks.append(mask)
+
+    # -------------------------------------------
+    # Build overlay
+    # -------------------------------------------
     overlay = image_np.copy()
 
     for (x1, y1, x2, y2), mask in zip(abs_boxes, masks):
-        mask_bool = (mask > 0.5)
-
+        mask_bool = mask > 0.5
         cv2.rectangle(overlay, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
         overlay[mask_bool] = (
             overlay[mask_bool] * 0.6 + np.array([0, 255, 0]) * 0.4
         ).astype(np.uint8)
 
-    # -----------------------------
-    # Save outputs
-    # -----------------------------
     outputs = Path("outputs")
     outputs.mkdir(exist_ok=True)
 
     stem = Path(image_path).stem
-
     overlay_path = outputs / f"{stem}_grounded_overlay.png"
     cv2.imwrite(str(overlay_path), cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
 
-    # -----------------------------
-    # Stickers
-    # -----------------------------
-    sticker_paths = []
-
+    # -------------------------------------------
+    # Stickers (transparent PNGs)
+    # -------------------------------------------
+    stickers = []
     img_bgra = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGRA)
 
     for i, ((x1, y1, x2, y2), mask) in enumerate(zip(abs_boxes, masks)):
         crop = img_bgra[y1:y2, x1:x2].copy()
-        mask_crop = (mask[y1:y2, x1:x2] > 0.5)
+        mask_crop = mask[y1:y2, x1:x2] > 0.5
         crop[~mask_crop] = [0, 0, 0, 0]
 
-        sticker_path = outputs / f"{stem}_grounded_sticker_{i}.png"
-        cv2.imwrite(str(sticker_path), crop)
-        sticker_paths.append(f"/outputs/{sticker_path.name}")
+        path = outputs / f"{stem}_grounded_sticker_{i}.png"
+        cv2.imwrite(str(path), crop)
+        stickers.append(f"/outputs/{path.name}")
 
-    # -----------------------------
-    # RETURN
-    # -----------------------------
-
-    clean_labels = [text_prompt.strip()] * len(abs_boxes)
     return {
         "message": "GroundingDINO + SAM2 segmentation successful.",
         "overlay": f"/outputs/{overlay_path.name}",
-        "stickers": sticker_paths,
-        "labels": clean_labels,        # <--- ⭐ CORRECT LABELS FOR EACH STICKER
+        "stickers": stickers,
+        "labels": [text_prompt] * len(stickers),
     }

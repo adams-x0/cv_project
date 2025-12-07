@@ -61,7 +61,7 @@ def run_rtdetr_seg(image_path: str):
     confs = r.boxes.conf.cpu().numpy()
     class_ids = r.boxes.cls.cpu().numpy().astype(int)
 
-    print("DEBUG BOXES:", boxes_xyxy, "CLASSES:", class_ids)
+    # print("DEBUG BOXES:", boxes_xyxy, "CLASSES:", class_ids)
 
     # No detections
     if len(boxes_xyxy) == 0:

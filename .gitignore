@@ -50,7 +50,7 @@ backend/yolov12/
 *.pth
 *.mp4
 *.jpg
-
+*.png
 
 # Hugging Face cache (optional)
 ~/.cache/huggingface/

@@ -5,6 +5,8 @@ from pathlib import Path
 from PIL import Image
 from transformers import OwlViTProcessor, OwlViTForObjectDetection
 
+torch.utils.checkpoint.use_reentrant = False
+
 # -------------------------------
 # SAM2 imports
 # -------------------------------
