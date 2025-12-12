@@ -18,8 +18,8 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 ------------------------------------------------------------
  3. INSTALL YOLOv12 ENGINE (REQUIRED)
 ------------------------------------------------------------
-git clone https://github.com/sunsmarterjie/yolov12.git
-cd ../yolov12
+cd yolov12
+pip install -r requirements.txt
 pip install -e .
 
 # DO NOT install "ultralytics" from pip (it breaks YOLOv12)

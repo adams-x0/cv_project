@@ -9,7 +9,7 @@ export function StickerCanvasEditor({ bg, sticker, onClose }: any) {
   const [scale, setScale] = useState(1);
 
   // ⭐ Movement speed (user-controlled)
-  const [speed, setSpeed] = useState(3); // default
+  const [speed, setSpeed] = useState(100); // default
 
   // ------------------------------------------------
   // Draw Background + Sticker

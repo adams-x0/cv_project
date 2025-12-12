@@ -138,7 +138,7 @@ async def segment_all(image: UploadFile = File(...)):
     # Grounded-SAM needs a prompt.
     # We call it with a default prompt (or set to None in your UI)
     grounded_res = run_grounded_sam(str(img_path), "object")
-    owl_res = run_owlvit_sam(str(img_path), "object")
+    owl_res = run_owlvit_sam(str(img_path), "camera")
 
     return {
         "message": "Ran all segmentation models successfully.",
