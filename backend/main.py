@@ -11,6 +11,7 @@ from models.rtdetr_seg import run_rtdetr_seg
 from models.grounding_sam import run_grounded_sam
 from models.mask2former_seg import run_mask2former_seg
 from models.trained_yolo_seg import run_trained_yolo_seg
+import time
 
 
 
@@ -130,18 +131,51 @@ async def segment_all(image: UploadFile = File(...)):
         f.write(await image.read())
 
     # Run ALL models (no prompt models)
+    timings = {}
+
+    t0 = time.time()
     yolo_res = run_yolo_seg(str(img_path))
+    timings["yolo_ms"] = (time.time() - t0) * 1000
+    print(f"YOLO took {timings['yolo_ms']} ms")
+
+    t0 = time.time()
     trained_yolo_res = run_trained_yolo_seg(str(img_path))
+    timings["trained_yolo_ms"] = (time.time() - t0) * 1000
+    print(f"Trained YOLO took {timings['trained_yolo_ms']} ms")
+
+
+    t0 = time.time()
     rtdetr_res = run_rtdetr_seg(str(img_path))
+    timings["rtdetr_ms"] = (time.time() - t0) * 1000
+    print(f"RT-DETR took {timings['rtdetr_ms']} ms")
+
+
+
+    t0 = time.time()
     mask2former_res = run_mask2former_seg(str(img_path))
+    timings["mask2former_ms"] = (time.time() - t0) * 1000
+    print(f"Mask2Former took {timings['mask2former_ms']} ms")
+
+
 
     # Grounded-SAM needs a prompt.
-    # We call it with a default prompt (or set to None in your UI)
+    # We call it with a default prompt 
+    t0 = time.time()
     grounded_res = run_grounded_sam(str(img_path), "object")
-    owl_res = run_owlvit_sam(str(img_path), "camera")
+    timings["grounded_ms"] = (time.time() - t0) * 1000
+    print(f"Grounded-SAM took {timings['grounded_ms']} ms")
+
+
+
+    t0 = time.time()
+    owl_res = run_owlvit_sam(str(img_path), "object")
+    timings["owlvit_sam_ms"] = (time.time() - t0) * 1000
+    print(f"OwlViT-SAM took {timings['owlvit_sam_ms']} ms")
+
 
     return {
         "message": "Ran all segmentation models successfully.",
+        "timings": timings,
         "yolo": yolo_res,
         "trained_yolo": trained_yolo_res,
         "rtdetr": rtdetr_res,
@@ -156,4 +190,4 @@ async def segment_all(image: UploadFile = File(...)):
 # ----------------------------------------------------------
 @app.get("/")
 async def root():
-    return {"message": "Backend running with OWL-ViT + SAM + YOLOv8-Seg"}
+    return {"message": "Backend running with OWL-ViT + SAM + YOLOv12-Seg"}

@@ -51,6 +51,7 @@ backend/outputs/                  # Segmentation results
 *.mp4
 *.jpg
 *.png
+*.jpeg
 
 # Hugging Face cache (optional)
 ~/.cache/huggingface/

@@ -5,7 +5,7 @@ from ultralytics import YOLO  # YOLOv12 engine (installed via pip install -e .)
 
 
 # ------------------------------------------------------------
-# COCO CLASS NAMES (80 classes)
+# CUSTOM Imagenet CLASS NAMES (10 classes)
 # ------------------------------------------------------------
 CUSTOM_CLASSES = [
     "Candle",
@@ -34,7 +34,7 @@ CLASS_COLORS = generate_class_colors(len(CUSTOM_CLASSES))
 
 
 # ------------------------------------------------------------
-# Load YOLOv12x-Seg model
+# Load trained weight
 # ------------------------------------------------------------
 MODEL_PATH = "best.pt"
 model = YOLO(str(MODEL_PATH))
