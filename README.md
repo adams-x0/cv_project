@@ -1,81 +1,162 @@
-# Setup Instructions (Using Conda Only) – OWL-ViT + SAM Segmentation App
+# OWL‑ViT + SAM Segmentation App
 
-------------------------------------------------------------
- 1. CREATE & ACTIVATE CONDA ENVIRONMENT
-------------------------------------------------------------
+This project combines **OWL‑ViT**, **RT-DETR**, **SAM / SAM2**, **Mask2Former**, **YOLOv12**, and **Grounded‑DINO** for advanced instance segmentation. The backend is built with **FastAPI**, and the frontend uses **React + Vite**.
+
+> **Note**: These instructions assume **Conda** is installed and available in your PATH. Conda is the only supported environment manager for this project.
+
+---
+
+## 1. Create & Activate Conda Environment
+
+```bash
 conda create -n segmentation_env python=3.10 -y
 conda activate segmentation_env
+```
 
-------------------------------------------------------------
- 2. INSTALL BACKEND DEPENDENCIES
-------------------------------------------------------------
+---
+
+## 2. Install Backend Dependencies
+
+```bash
 cd backend
 pip install -r requirements.txt
+```
 
-# If torch fails to install, use:
-# (CPU version)
+### PyTorch (CPU fallback)
+If PyTorch fails to install automatically, install the CPU-only version manually:
+
+```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-------------------------------------------------------------
- 3. INSTALL YOLOv12 ENGINE (REQUIRED)
-------------------------------------------------------------
+```
+
+---
+
+## 3. Install YOLOv12 Engine (**Required**)
+
+```bash
 cd yolov12
 pip install -r requirements.txt
 pip install -e .
+```
 
-# DO NOT install "ultralytics" from pip (it breaks YOLOv12)
+⚠️ **Important**
+- **Do NOT** install `ultralytics` from pip.
+- Installing `ultralytics` will break YOLOv12 compatibility.
 
-------------------------------------------------------------
- 4. DOWNLOAD WEIGHTS (REQUIRED)
-------------------------------------------------------------
-# Make sure the files are located in backend folder
+---
 
-# SAM
-# Run this inside backend folder or click on link
+## 4. Download Models & Weights (**Required**)
+
+All model weights should be placed inside the **`backend/`** directory unless stated otherwise.
+
+### Segment Anything (SAM)
+Run inside the `backend` folder:
+
+```bash
 wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
+```
 
-# YOLO
-# Download the model weights from here (Instance segmentation)
- https://github.com/sunsmarterjie/yolov12
+---
 
-# download trained yolo weight
-https://drive.google.com/drive/folders/1EG65LoOyMW0_On00ATcZpS_H9AHs05B6?usp=drive_link
+### YOLOv12 (Instance Segmentation)
 
- # SAM2
+- Repository:
+  https://github.com/sunsmarterjie/yolov12
+
+- Pretrained weights:
+  https://drive.google.com/drive/folders/1EG65LoOyMW0_On00ATcZpS_H9AHs05B6
+
+Download the trained YOLOv12 weights and place them in the appropriate backend directory.
+
+---
+
+### SAM2
+
+```bash
 cd models
-git clone https://github.com/facebookresearch/sam2.git && cd sam2
+git clone https://github.com/facebookresearch/sam2.git
+cd sam2
 pip install -e .
+```
 
-# Grounding-Dino
+---
+
+### Grounded‑SAM‑2 / Grounding‑DINO
+
+```bash
 cd models
 git clone https://github.com/IDEA-Research/Grounded-SAM-2.git
 pip install git+https://github.com/IDEA-Research/GroundingDINO.git
+```
+
+Download Grounding‑DINO checkpoints:
+
+```bash
 cd Grounded-SAM-2/checkpoints
 dos2unix download_ckpts.sh
 bash download_ckpts.sh
+```
 
+---
 
+## 5. Run the FastAPI Backend
 
-
-
-------------------------------------------------------------
- 5. RUN THE FASTAPI BACKEND
-------------------------------------------------------------
+```bash
 cd backend
 uvicorn main:app --reload --port 8000
+```
 
-# API docs available at:
-# http://localhost:8000/docs
+### API Documentation
+Once running, interactive API docs are available at:
 
-------------------------------------------------------------
- 6. SET UP & RUN FRONTEND (React + Vite)
-------------------------------------------------------------
+```
+http://localhost:8000/docs
+```
+
+---
+
+## 6. Set Up & Run Frontend (React + Vite)
+
+```bash
 cd ../frontend
 npm install
+```
 
-# (Optional) Create a .env file in frontend folder:
-# VITE_BACKEND_URL=http://localhost:8000
+### Optional Environment Variable
+Create a `.env` file inside the `frontend/` directory:
 
+```env
+VITE_BACKEND_URL=http://localhost:8000
+```
+
+Start the frontend:
+
+```bash
 npm run dev
+```
 
-# Frontend will start at:
-# http://localhost:5173
+Frontend will be available at:
+
+```
+http://localhost:5173
+```
+
+---
+
+## Troubleshooting
+
+- Ensure all model weights are downloaded before starting the backend.
+- If CUDA is required, install a compatible PyTorch version manually.
+- If you encounter permission or script errors on Windows, ensure `dos2unix` is installed or run commands via WSL.
+
+---
+
+## License & Credits
+
+This project builds on open‑source work from:
+- Meta AI (SAM / SAM2)
+- IDEA Research (Grounding‑DINO)
+- YOLOv12 contributors
+
+Refer to individual repositories for license details.
+
