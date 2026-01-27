@@ -1,4 +1,4 @@
-# OWL‑ViT + SAM Segmentation App
+# Instance Segmentation App
 
 This project combines **OWL‑ViT**, **RT-DETR**, **SAM / SAM2**, **Mask2Former**, **YOLOv12**, and **Grounded‑DINO** for advanced instance segmentation. The backend is built with **FastAPI**, and the frontend uses **React + Vite**.
 
